@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Job Details - Kit POS Uganda Limited</title>
+<style>
+body { font-family: Arial, sans-serif; max-width: 900px; margin: auto; padding: 1rem; background:#f8f9fa; color:#222; }
+h1 { text-align: center; color:#004085; }
+a { color: #0069d9; }
+a:hover, a:focus { text-decoration: underline; }
+section { background: #fff; border-radius: 8px; padding: 1.5rem 2rem; margin-bottom: 1.5rem; box-shadow: 0 2px 6px rgba(0,0,0,0.1);}
+button.apply-btn {
+  background-color: #0069d9; color: white; border: none; padding: 0.7rem 1.3rem;
+  font-size: 1rem; font-weight: 600; border-radius: 6px; cursor: pointer;
+  transition: background-color 0.3s ease; margin-top: 1rem;
+}
+button.apply-btn:hover, button.apply-btn:focus {
+  background-color: #004a99; outline:none;
+}
+#apply-alert {
+  display: none; position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+  background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb;
+  padding: 1rem 1.5rem; border-radius: 6px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  font-weight: 600; z-index: 1000;
+}
+ul { margin-top: 0; margin-bottom: 1rem; padding-left: 1.4rem; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1 id="job-title">Loading...</h1>
+</header>
+
+<main id="job-content" aria-live="polite" aria-atomic="true">
+  <!-- Job details will be inserted here -->
+</main>
+
+<div id="apply-alert" role="alert" aria-live="polite">Thank you for your interest! Please apply via Brightermonday Portal.</div>
+
+<script>
+function getQueryParam(param) {
+  const urlParams = new URLSearchParams(window.location.search);
+  return urlParams.get(param);
+}
+
+function createLink(url, text) {
+  const a = document.createElement('a');
+  a.href = url;
+  a.target = '_blank';
+  a.rel = 'noopener noreferrer';
+  a.textContent = text;
+  return a;
+}
+
+function renderList(items) {
+  const ul = document.createElement('ul');
+  items.forEach(item => {
+    const li = document.createElement('li');
+    li.textContent = item;
+    ul.appendChild(li);
+  });
+  return ul;
+}
+
+function createSection(title, content) {
+  const section = document.createElement('section');
+  const h2 = document.createElement('h2');
+  h2.textContent = title;
+  section.appendChild(h2);
+  if(content instanceof HTMLElement){
+    section.appendChild(content);
+  } else {
+    const p = document.createElement('p');
+    p.innerHTML = content.replace(/\n/g, '<br>');
+    section.appendChild(p);
+  }
+  return section;
+}
+
+async function loadJobDetails() {
+  const jobIndex = getQueryParam('job');
+  if(jobIndex === null) {
+    document.getElementById('job-content').textContent = 'No job selected.';
+    return;
+  }
+
+  try {
+    const response = await fetch('jobs-data.json');
+    if(!response.ok) throw new Error('Failed to load job data.');
+
+    const jobs = await response.json();
+    const job = jobs[Number(jobIndex)];
+
+    if(!job) {
+      document.getElementById('job-content').textContent = 'Job not found.';
+      return;
+    }
+
+    document.getElementById('job-title').textContent = job.title;
+
+    const container = document.getElementById('job-content');
+    container.innerHTML = ''; // clear
+
+    // Company link with job industry and location links
+    const companySection = document.createElement('section');
+    const companyLink = createLink(job.companyUrl, job.companyName);
+    companySection.appendChild(companyLink);
+    container.appendChild(companySection);
+
+    // Job Meta: category, location, job type, industry with spacing
+    const metaSection = document.createElement('section');
+    const metaDiv = document.createElement('div');
+    [ 
+      {url: job.jobCategoryUrl, text: job.jobCategory},
+      {url: job.locationUrl, text: job.location},
+      {url: job.jobTypeUrl, text: job.jobType},
+      {url: job.jobIndustryUrl, text: job.jobIndustry}
+    ].forEach((obj,i, arr) => {
+      if(obj.url && obj.text){
+        metaDiv.appendChild(createLink(obj.url, obj.text));
+        if(i < arr.length -1){
+          metaDiv.appendChild(document.createTextNode(' | '));
+        }
+      }
+    });
+    metaSection.appendChild(metaDiv);
+    container.appendChild(metaSection);
+
+    // Salary
+    container.appendChild(createSection('Salary', job.salary));
+
+    // Job Summary
+    const summaryHTML = `
+      <ul>
+        <li><strong>Minimum Qualification:</strong> ${job.minimumQualification}</li>
+        <li><strong>Experience Level:</strong> ${job.experienceLevel}</li>
+        <li><strong>Experience Length:</strong> ${job.experienceLength}</li>
+        <li><strong>Working Hours:</strong> ${job.workingHours}</li>
+      </ul>
+      <p>We are seeking a dynamic and results-driven Sales Manager to lead our efforts in promoting and selling the Saleslive POS software across Uganda. The ideal candidate will have a proven track record in software sales, a deep understanding of the Ugandan market, and exceptional leadership skills to build and manage a high-performing sales team.</p>`;
+    container.appendChild(createSection('Job Summary', summaryHTML));
+
+    // About Us
+    container.appendChild(createSection('About Us', job.aboutUs));
+
+    // Responsibilities
+    container.appendChild(createSection('Key Responsibilities', renderList(job.keyResponsibilities)));
+
+    // Requirements
+    container.appendChild(createSection('Requirements', renderList(job.requirements)));
+
+    // What We Offer
+    container.appendChild(createSection('What We Offer', renderList(job.whatWeOffer)));
+
+    // Remote Work
+    container.appendChild(createSection('Remote Work', job.remoteWork));
+
+    // How to Apply
+    container.appendChild(createSection('How to Apply', job.howToApply));
+
+    // Easy apply button
+    const btn = document.createElement('button');
+    btn.textContent = 'Easy Apply';
+    btn.className = 'apply-btn';
+    btn.addEventListener('click', () => {
+      const alertBox = document.getElementById('apply-alert');
+      alertBox.style.display = 'block';
+      setTimeout(() => alertBox.style.display = 'none', 4000);
+    });
+    container.appendChild(btn);
+
+  } catch(e) {
+    const container = document.getElementById('job-content');
+    container.textContent = 'Error loading job details.';
+    console.error(e);
+  }
+}
+
+loadJobDetails();
+</script>
+
+</body>
+</html>

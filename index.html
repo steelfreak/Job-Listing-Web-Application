@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Job Listings - Kit POS Uganda Limited</title>
+<style>
+body { font-family: Arial, sans-serif; max-width: 900px; margin: auto; padding: 1rem; background:#f8f9fa; color:#222; }
+h1 { text-align: center; color:#004085; }
+ul { list-style: none; padding: 0; }
+li { background:#fff; margin-bottom:1rem; border-radius:6px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+a.job-link {
+  display: block; padding: 1rem; font-size: 1.2rem; color:#0069d9; text-decoration: none;
+}
+a.job-link:hover, a.job-link:focus {
+  background-color:#c1d7f0; outline:none;
+}
+.job-subinfo {
+  font-size: 0.9rem; color:#555; padding: 0 1rem 1rem;
+}
+.job-subinfo a {
+  color:#007bff; text-decoration:none; margin-right: 0.5rem;
+}
+.job-subinfo a:hover, .job-subinfo a:focus {
+  text-decoration: underline;
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Career Opportunities at Kit POS Uganda Limited</h1>
+</header>
+
+<main>
+  <ul id="job-list" aria-live="polite" aria-atomic="true">
+    <!-- Job items inserted here -->
+  </ul>
+</main>
+
+<script>
+async function loadJobList() {
+  try {
+    const response = await fetch('jobs-data.json');
+    if (!response.ok) throw new Error('Failed to fetch job data');
+
+    const jobs = await response.json();
+
+    const list = document.getElementById('job-list');
+    list.innerHTML = ''; // Clear list
+
+    jobs.forEach((job, index) => {
+      const li = document.createElement('li');
+
+      // Link to details page with job index query param
+      const link = document.createElement('a');
+      link.href = `details.html?job=${index}`;
+      link.className = 'job-link';
+      link.textContent = job.title;
+
+      const subinfo = document.createElement('div');
+      subinfo.className = 'job-subinfo';
+
+      // Insert company name link
+      const company = document.createElement('a');
+      company.href = job.companyUrl;
+      company.target = '_blank';
+      company.rel = 'noopener noreferrer';
+      company.textContent = job.companyName;
+      subinfo.appendChild(company);
+
+      // Insert category, location, job type, industry links with spacing
+      const metaFields = [
+        {url: job.jobCategoryUrl, text: job.jobCategory},
+        {url: job.locationUrl, text: job.location},
+        {url: job.jobTypeUrl, text: job.jobType},
+        {url: job.jobIndustryUrl, text: job.jobIndustry}
+      ];
+      metaFields.forEach(field => {
+        const sep = document.createTextNode(' ');
+        if(field.url && field.text){
+          const a = document.createElement('a');
+          a.href = field.url;
+          a.target = '_blank';
+          a.rel = 'noopener noreferrer';
+          a.textContent = field.text;
+          subinfo.appendChild(sep);
+          subinfo.appendChild(a);
+        }
+      });
+
+      li.appendChild(link);
+      li.appendChild(subinfo);
+      list.appendChild(li);
+    });
+  } catch (e) {
+    document.getElementById('job-list').innerText = 'Failed to load job listings.';
+    console.error(e);
+  }
+}
+
+loadJobList();
+</script>
+
+</body>
+</html>
