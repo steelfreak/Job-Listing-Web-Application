@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Single Job Entry with Save, Export, Import JSON</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    max-width: 900px;
+    margin: 2rem auto;
+    padding: 1rem;
+    background: #f8f9fa;
+    color: #222;
+  }
+  h1 {
+    text-align: center;
+    color: #004085;
+    margin-bottom: 1rem;
+  }
+  form {
+    background: white;
+    padding: 1rem 2rem 2rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    margin-bottom: 1rem;
+  }
+  label {
+    display: block;
+    margin-top: 1rem;
+    font-weight: bold;
+  }
+  input[type=text], textarea {
+    width: 100%;
+    padding: 0.5rem;
+    font-size: 1rem;
+    margin-top: 0.25rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-family: monospace;
+    resize: vertical;
+  }
+  textarea {
+    min-height: 60px;
+  }
+  .button-row {
+    margin-top: 1.5rem;
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  button {
+    padding: 0.7rem 1.5rem;
+    font-size: 1rem;
+    font-weight: bold;
+    border-radius: 6px;
+    cursor: pointer;
+    border: none;
+    color: white;
+  }
+  button.save {
+    background-color: #28a745;
+  }
+  button.save:hover {
+    background-color: #1e7e34;
+  }
+  button.export {
+    background-color: #007bff;
+  }
+  button.export:hover {
+    background-color: #0056b3;
+  }
+  button.import {
+    background-color: #6c757d;
+  }
+  button.import:hover {
+    background-color: #5a6268;
+  }
+  #json-display {
+    background: #272822;
+    color: #f8f8f2;
+    font-family: monospace;
+    padding: 1rem;
+    border-radius: 8px;
+    max-height: 350px;
+    overflow: auto;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+  }
+</style>
+</head>
+<body>
+
+<h1>Single Job Entry Form</h1>
+
+<form id="job-form">
+  <label>Title
+    <input type="text" name="title" required />
+  </label>
+  
+  <label>Company Name
+    <input type="text" name="companyName" required />
+  </label>
+  
+  <label>Company URL
+    <input type="text" name="companyUrl" required />
+  </label>
+  
+  <label>Job Category
+    <input type="text" name="jobCategory" required />
+  </label>
+  
+  <label>Job Category URL
+    <input type="text" name="jobCategoryUrl" required />
+  </label>
+  
+  <label>Location
+    <input type="text" name="location" required />
+  </label>
+  
+  <label>Location URL
+    <input type="text" name="locationUrl" required />
+  </label>
+  
+  <label>Job Type
+    <input type="text" name="jobType" required />
+  </label>
+  
+  <label>Job Type URL
+    <input type="text" name="jobTypeUrl" required />
+  </label>
+  
+  <label>Job Industry
+    <input type="text" name="jobIndustry" required />
+  </label>
+  
+  <label>Job Industry URL
+    <input type="text" name="jobIndustryUrl" required />
+  </label>
+  
+  <label>Salary
+    <input type="text" name="salary" required />
+  </label>
+
+  <label>Minimum Qualification
+    <input type="text" name="minimumQualification" required />
+  </label>
+  
+  <label>Experience Level
+    <input type="text" name="experienceLevel" required />
+  </label>
+  
+  <label>Experience Length
+    <input type="text" name="experienceLength" required />
+  </label>
+  
+  <label>Working Hours
+    <input type="text" name="workingHours" required />
+  </label>
+  
+  <label>Location Detail
+    <input type="text" name="locationDetail" required />
+  </label>
+  
+  <label>About Us
+    <textarea name="aboutUs" required></textarea>
+  </label>
+  
+  <label>Key Responsibilities (comma separated)
+    <textarea name="keyResponsibilities" required></textarea>
+  </label>
+  
+  <label>Requirements (comma separated)
+    <textarea name="requirements" required></textarea>
+  </label>
+  
+  <label>What We Offer (comma separated)
+    <textarea name="whatWeOffer" required></textarea>
+  </label>
+  
+  <label>Remote Work
+    <textarea name="remoteWork" required></textarea>
+  </label>
+  
+  <label>How to Apply
+    <textarea name="howToApply" required></textarea>
+  </label>
+  
+  <label>Apply Page URL
+    <input type="text" name="applyPageUrl" required />
+  </label>
+
+  <div class="button-row">
+    <button type="button" class="save" id="save-entry">Save Entry</button>
+    <button type="button" class="export" id="export-json">Export JSON</button>
+    <button type="button" class="import" id="import-json">Import JSON</button>
+    <input type="file" id="import-file" accept=".json" style="display:none;" />
+  </div>
+</form>
+
+<h2>Saved Job JSON:</h2>
+<pre id="json-display">No job saved yet.</pre>
+
+<script>
+  let savedJob = null;
+
+  // Helper to get form data as job JSON
+  function collectFormData() {
+    const form = document.getElementById('job-form');
+    const data = {};
+
+    data.title = form.title.value.trim();
+    data.companyName = form.companyName.value.trim();
+    data.companyUrl = form.companyUrl.value.trim();
+    data.jobCategory = form.jobCategory.value.trim();
+    data.jobCategoryUrl = form.jobCategoryUrl.value.trim();
+    data.location = form.location.value.trim();
+    data.locationUrl = form.locationUrl.value.trim();
+    data.jobType = form.jobType.value.trim();
+    data.jobTypeUrl = form.jobTypeUrl.value.trim();
+    data.jobIndustry = form.jobIndustry.value.trim();
+    data.jobIndustryUrl = form.jobIndustryUrl.value.trim();
+    data.salary = form.salary.value.trim();
+    data.minimumQualification = form.minimumQualification.value.trim();
+    data.experienceLevel = form.experienceLevel.value.trim();
+    data.experienceLength = form.experienceLength.value.trim();
+    data.workingHours = form.workingHours.value.trim();
+    data.locationDetail = form.locationDetail.value.trim();
+    data.aboutUs = form.aboutUs.value.trim();
+    data.keyResponsibilities = form.keyResponsibilities.value.split(',').map(s => s.trim()).filter(Boolean);
+    data.requirements = form.requirements.value.split(',').map(s => s.trim()).filter(Boolean);
+    data.whatWeOffer = form.whatWeOffer.value.split(',').map(s => s.trim()).filter(Boolean);
+    data.remoteWork = form.remoteWork.value.trim();
+    data.howToApply = form.howToApply.value.trim();
+    data.applyPageUrl = form.applyPageUrl.value.trim();
+
+    return data;
+  }
+
+  // Fill form with job data
+  function fillForm(job) {
+    const form = document.getElementById('job-form');
+
+    form.title.value = job.title || '';
+    form.companyName.value = job.companyName || '';
+    form.companyUrl.value = job.companyUrl || '';
+    form.jobCategory.value = job.jobCategory || '';
+    form.jobCategoryUrl.value = job.jobCategoryUrl || '';
+    form.location.value = job.location || '';
+    form.locationUrl.value = job.locationUrl || '';
+    form.jobType.value = job.jobType || '';
+    form.jobTypeUrl.value = job.jobTypeUrl || '';
+    form.jobIndustry.value = job.jobIndustry || '';
+    form.jobIndustryUrl.value = job.jobIndustryUrl || '';
+    form.salary.value = job.salary || '';
+    form.minimumQualification.value = job.minimumQualification || '';
+    form.experienceLevel.value = job.experienceLevel || '';
+    form.experienceLength.value = job.experienceLength || '';
+    form.workingHours.value = job.workingHours || '';
+    form.locationDetail.value = job.locationDetail || '';
+    form.aboutUs.value = job.aboutUs || '';
+    form.keyResponsibilities.value = (job.keyResponsibilities || []).join(', ');
+    form.requirements.value = (job.requirements || []).join(', ');
+    form.whatWeOffer.value = (job.whatWeOffer || []).join(', ');
+    form.remoteWork.value = job.remoteWork || '';
+    form.howToApply.value = job.howToApply || '';
+    form.applyPageUrl.value = job.applyPageUrl || '';
+  }
+
+  // Display JSON nicely
+  function displayJson(obj) {
+    const pre = document.getElementById('json-display');
+    if (!obj) {
+      pre.textContent = 'No job saved yet.';
+    } else {
+      pre.textContent = JSON.stringify(obj, null, 2);
+    }
+  }
+
+  document.getElementById('save-entry').addEventListener('click', () => {
+    const job = collectFormData();
+    savedJob = job;
+    displayJson(savedJob);
+    alert('Job entry saved!');
+  });
+
+  document.getElementById('export-json').addEventListener('click', () => {
+    if (!savedJob) {
+      alert('No job saved! Please save a job entry first.');
+      return;
+    }
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify([savedJob], null, 2));
+    const a = document.createElement('a');
+    a.href = dataStr;
+    a.download = 'job-data.json';
+    a.click();
+  });
+
+  document.getElementById('import-json').addEventListener('click', () => {
+    document.getElementById('import-file').value = null;
+    document.getElementById('import-file').click();
+  });
+
+  document.getElementById('import-file').addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const data = JSON.parse(event.target.result);
+        if (!Array.isArray(data) || data.length === 0) {
+          alert('Invalid JSON format: expected a non-empty array.');
+          return;
+        }
+        fillForm(data[0]);
+        savedJob = data[0];
+        displayJson(savedJob);
+        alert('Job data imported and form populated.');
+      } catch (err) {
+        alert('Failed to parse JSON file.');
+        console.error(err);
+      }
+    };
+    reader.readAsText(file);
+  });
+
+  // Optionally initialize display
+  displayJson(null);
+</script>
+
+</body>
+</html>
